@@ -1,0 +1,86 @@
+---
+
+name: 'Setup Django backend'
+description: 'Set up prerequisites for a Maykin Django backend'
+
+inputs:
+  apt-packages:
+    description: Any apt packages to install, space-separated
+    required: false
+    default: 'gettext postgresql-client'
+
+  python-version:
+    description: Python version, passed to actions/setup-python
+    required: true
+    default: '3.10'
+
+  optimize-postgres:
+    description: >
+      Tune postgres for non-durable but faster tests. Requires 'pg-service' name. Set
+      to string 'yes' to enable (the default).
+    required: false
+    default: 'yes'
+
+  pg-service:
+    description: >
+      Name of the postgres service. If not specified (the default), no optimization is
+      done. See 'optimize-postgres'.
+    required: false
+    default: ''
+
+  npm-ci-flags:
+    description: Additional arguments for the 'npm ci' command.
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install OS dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes ${{ inputs.apt-packages }}
+
+    - name: Tune PostgreSQL for test performance
+      if: ${{ inputs.pg-service != '' && inputs.optimize-postgres == 'yes' }}
+      run: |
+        docker exec -i ${{ inputs.pg-service }} bash << EOF
+          sed -i -e 's/#fsync = on/fsync = off/' /var/lib/postgresql/data/postgresql.conf
+          sed -i -e 's/#full_page_writes = on/full_page_writes = off/' /var/lib/postgresql/data/postgresql.conf
+          sed -i -e 's/#synchronous_commit = on/synchronous_commit = off/' /var/lib/postgresql/data/postgresql.conf
+          sed -i -e 's/shared_buffers = 128MB/shared_buffers = 2GB/' /var/lib/postgresql/data/postgresql.conf
+          sed -i -e 's/max_wal_size = 1GB/max_wal_size = 4GB/' /var/lib/postgresql/data/postgresql.conf
+        EOF
+
+        docker restart --time=0 ${{ inputs.pg-service }}
+
+        # block until container is up and running again
+        until pg_isready -h 127.0.0.1; do
+          echo "Waiting for DB to be up again..."
+          sleep 1
+        done
+
+        echo "Done configuring PostgreSQL for faster tests."
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: 'pip'
+        cache-dependency-path: 'requirements/*.txt'
+
+    - name: Install backend dependencies
+      run: |
+        pip install -r requirements/ci.txt \
+          --use-pep517 \
+          --use-feature=no-binary-enable-wheel-cache
+
+    # TODO: enable cache
+    - uses: actions/setup-node@v3
+      with:
+        node-version-file: '.nvmrc'
+
+    - name: Build frontend
+      run: |
+        npm ci ${{ inputs.npm-ci-flags }}
+        npm run build
+
