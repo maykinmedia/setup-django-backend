@@ -40,6 +40,7 @@ runs:
       run: |
         sudo apt-get update
         sudo apt-get install --yes ${{ inputs.apt-packages }}
+      shell: bash
 
     - name: Tune PostgreSQL for test performance
       if: ${{ inputs.pg-service != '' && inputs.optimize-postgres == 'yes' }}
@@ -61,6 +62,7 @@ runs:
         done
 
         echo "Done configuring PostgreSQL for faster tests."
+      shell: bash
 
     - uses: actions/setup-python@v4
       with:
@@ -73,6 +75,7 @@ runs:
         pip install -r requirements/ci.txt \
           --use-pep517 \
           --use-feature=no-binary-enable-wheel-cache
+      shell: bash
 
     # TODO: enable cache
     - uses: actions/setup-node@v3
@@ -83,4 +86,5 @@ runs:
       run: |
         npm ci ${{ inputs.npm-ci-flags }}
         npm run build
+      shell: bash
 
