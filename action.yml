@@ -80,7 +80,7 @@ runs:
     - name: Calculate requirements path
       id: requirements_path
       run: |
-        if [${{ inputs.working-directory }}]
+        if [[ "${{ inputs.working-directory }}" ]]
         then
           prefix=${{ inputs.working-directory }}/
         else
