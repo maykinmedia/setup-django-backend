@@ -28,6 +28,11 @@ inputs:
     required: false
     default: ''
 
+  setup-node:
+    description: Whether to setup node and npm packages.
+    required: false
+    default: 'yes'
+
   npm-ci-flags:
     description: Additional arguments for the 'npm ci' command.
     required: false
@@ -37,6 +42,7 @@ runs:
   using: 'composite'
   steps:
     - name: Install OS dependencies
+      if: ${{ inputs.apt-packages }}
       run: |
         sudo apt-get update
         sudo apt-get install --yes ${{ inputs.apt-packages }}
@@ -79,10 +85,12 @@ runs:
 
     # TODO: enable cache
     - uses: actions/setup-node@v3
+      if: ${{ inputs.setup-node == 'yes' }}
       with:
         node-version-file: '.nvmrc'
 
     - name: Build frontend
+      if: ${{ inputs.setup-node == 'yes' }}
       run: |
         npm ci ${{ inputs.npm-ci-flags }}
         npm run build
