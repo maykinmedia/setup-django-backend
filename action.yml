@@ -14,6 +14,11 @@ inputs:
     required: true
     default: '3.10'
 
+  python-requirements-dir:
+    description: Path to directory with requirements file(s) to install
+    required: false
+    default: 'requirements/'
+
   optimize-postgres:
     description: >
       Tune postgres for non-durable but faster tests. Requires 'pg-service' name. Set
@@ -81,7 +86,7 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
         cache: 'pip'
-        cache-dependency-path: 'requirements/*.txt'
+        cache-dependency-path: '${{ inputs.python-requirements-dir }}*.txt'
 
     - name: Install backend dependencies
       run: |
