@@ -14,11 +14,6 @@ inputs:
     required: true
     default: '3.10'
 
-  python-requirements-dir:
-    description: Path to directory with requirements file(s) to install
-    required: false
-    default: 'requirements/'
-
   optimize-postgres:
     description: >
       Tune postgres for non-durable but faster tests. Requires 'pg-service' name. Set
@@ -82,11 +77,23 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
 
+    - name: Calculate requirements path
+      id: requirements_path
+      run: |
+        if [${{ inputs.working-directory }}]
+        then
+          prefix=${{ inputs.working-directory }}/
+        else
+          prefix=''
+        fi
+        echo "requirements_dir_prefix=${prefix}" >> $GITHUB_OUTPUT
+      shell: bash
+
     - uses: actions/setup-python@v4
       with:
         python-version: ${{ inputs.python-version }}
         cache: 'pip'
-        cache-dependency-path: '${{ inputs.python-requirements-dir }}*.txt'
+        cache-dependency-path: '${{ steps.requirements_path.outputs.requirements_dir_prefix }}requirements/*.txt'
 
     - name: Install backend dependencies
       run: |
