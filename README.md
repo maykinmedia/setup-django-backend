@@ -1,6 +1,6 @@
 # setup-django-backend Github workflow action
 
-This composite workflow action takes care of some boilerplate for Maykin's Djanog
+This composite workflow action takes care of some boilerplate for Maykin's Django
 projects:
 
 * Setting up Python (with pip cache)
