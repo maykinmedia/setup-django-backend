@@ -33,6 +33,11 @@ inputs:
     required: false
     default: 'yes'
 
+  nvmrc-custom-dir:
+    description: Directory within the github.workspace directory where to find the .nvmrc file (for the setup-node action).
+    required: false
+    default: ''
+
   npm-ci-flags:
     description: Additional arguments for the 'npm ci' command.
     required: false
@@ -107,7 +112,7 @@ runs:
     - uses: actions/setup-node@v3
       if: ${{ inputs.setup-node == 'yes' }}
       with:
-        node-version-file: '.nvmrc'
+        node-version-file: ${{ inputs.nvmrc-custom-dir && format('{0}/{1}', inputs.nvmrc-custom-dir, '.nvmrc') || '.nvmrc' }}
 
     - name: Build frontend
       if: ${{ inputs.setup-node == 'yes' }}
