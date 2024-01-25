@@ -94,7 +94,7 @@ runs:
         echo "requirements_dir_prefix=${prefix}" >> $GITHUB_OUTPUT
       shell: bash
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
         cache: 'pip'
@@ -109,7 +109,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
 
     # TODO: enable cache
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       if: ${{ inputs.setup-node == 'yes' }}
       with:
         node-version-file: ${{ inputs.nvmrc-custom-dir && format('{0}/{1}', inputs.nvmrc-custom-dir, '.nvmrc') || '.nvmrc' }}
