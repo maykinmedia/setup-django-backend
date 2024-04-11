@@ -95,15 +95,35 @@ runs:
       shell: bash
 
     - uses: actions/setup-python@v5
+      id: setup_python
       with:
         python-version: ${{ inputs.python-version }}
-        cache: 'pip'
-        cache-dependency-path: '${{ steps.requirements_path.outputs.requirements_dir_prefix }}requirements/*.txt'
 
     - name: Install uv (pip alternative)
+      id: setup_uv
       # Docs: https://github.com/astral-sh/uv?tab=readme-ov-file#getting-started
-      run: pip install uv
+      run: |
+        pip install uv
+        # calculate cache parameters
+
+        cache_dependency_path="${{ steps.requirements_path.outputs.requirements_dir_prefix }}requirements/*.txt"
+
+        ubuntu_version=$(lsb_release -rs)
+        restore_key="uv-${{ runner.os }}-Ubuntu-${ubuntu_version}-python-${{ steps.setup_python.outputs.python-version }}"
+
+        echo "uv_cache_dir=$(uv cache dir)" >> "$GITHUB_OUTPUT"
+        echo "cache_dependency_path=${cache_dependency_path}" >> "$GITHUB_OUTPUT"
+        echo "cache_restore_key=${restore_key}" >> "$GITHUB_OUTPUT"
       shell: bash
+
+    - name: (Restore) uv cache
+      uses:  actions/cache@v4
+      with:
+        path: ${{ steps.setup_uv.outputs.uv_cache_dir }}
+        key: ${{ steps.setup_uv.outputs.cache_restore_key }}-${{ hashFiles(steps.setup_uv.outputs.cache_dependency_path) }}
+        restore-keys: |
+          ${{ steps.setup_uv.outputs.cache_restore_key }}-
+        save-always: 'true'
 
     - name: Install backend dependencies
       run: |
