@@ -100,11 +100,16 @@ runs:
         cache: 'pip'
         cache-dependency-path: '${{ steps.requirements_path.outputs.requirements_dir_prefix }}requirements/*.txt'
 
+    - name: Install uv (pip alternative)
+      # Docs: https://github.com/astral-sh/uv?tab=readme-ov-file#getting-started
+      run: pip install uv
+      shell: bash
+
     - name: Install backend dependencies
       run: |
-        pip install -r requirements/ci.txt \
-          --use-pep517 \
-          --use-feature=no-binary-enable-wheel-cache
+        uv pip install \
+          --system \
+          -r requirements/ci.txt
       shell: bash
       working-directory: ${{ inputs.working-directory }}
 
