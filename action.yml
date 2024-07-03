@@ -102,6 +102,7 @@ runs:
 
     - name: Install backend dependencies
       run: |
+        pip install 'pip<24.1'
         pip install -r requirements/ci.txt \
           --use-pep517 \
           --use-feature=no-binary-enable-wheel-cache
