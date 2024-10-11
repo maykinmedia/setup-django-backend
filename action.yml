@@ -117,13 +117,13 @@ runs:
       shell: bash
 
     - name: (Restore) uv cache
-      uses:  actions/cache@v4
+      id: uv-cache-restore
+      uses: actions/cache/restore@v4
       with:
-        path: ${{ steps.setup_uv.outputs.uv_cache_dir }}
         key: ${{ steps.setup_uv.outputs.cache_restore_key }}-${{ hashFiles(steps.setup_uv.outputs.cache_dependency_path) }}
         restore-keys: |
           ${{ steps.setup_uv.outputs.cache_restore_key }}-
-        save-always: 'true'
+        path: ${{ steps.setup_uv.outputs.uv_cache_dir }}
 
     - name: Install backend dependencies
       run: |
@@ -146,4 +146,12 @@ runs:
         npm run build
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+
+    - name: Save uv cache
+      id: uv-cache-save
+      if: always() && steps.uv-cache-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        key: ${{ steps.setup_uv.outputs.cache_restore_key }}-${{ hashFiles(steps.setup_uv.outputs.cache_dependency_path) }}
+        path: ${{ steps.setup_uv.outputs.uv_cache_dir }}
 
