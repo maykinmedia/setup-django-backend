@@ -1,55 +1,54 @@
 ---
-
-name: 'Setup Django backend'
-description: 'Set up prerequisites for a Maykin Django backend'
+name: "Setup Django backend"
+description: "Set up prerequisites for a Maykin Django backend"
 
 inputs:
   apt-packages:
     description: Any apt packages to install, space-separated
     required: false
-    default: 'gettext postgresql-client'
+    default: "gettext postgresql-client"
 
   python-version:
     description: Python version, passed to actions/setup-python
     required: true
-    default: '3.10'
+    default: "3.10"
 
   optimize-postgres:
     description: >
       Tune postgres for non-durable but faster tests. Requires 'pg-service' name. Set
       to string 'yes' to enable (the default).
     required: false
-    default: 'yes'
+    default: "yes"
 
   pg-service:
     description: >
       Name of the postgres service. If not specified (the default), no optimization is
       done. See 'optimize-postgres'.
     required: false
-    default: ''
+    default: ""
 
   setup-node:
     description: Whether to setup node and npm packages.
     required: false
-    default: 'yes'
+    default: "yes"
 
   nvmrc-custom-dir:
     description: Directory within the github.workspace directory where to find the .nvmrc file (for the setup-node action).
     required: false
-    default: ''
+    default: ""
 
   npm-ci-flags:
     description: Additional arguments for the 'npm ci' command.
     required: false
-    default: ''
+    default: ""
 
   working-directory:
     description: Specifies the working directory where commands are run.
     required: false
-    default: ''
+    default: ""
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Install OS dependencies
       if: ${{ inputs.apt-packages }}
@@ -127,6 +126,17 @@ runs:
 
     - name: Install backend dependencies
       run: |
+        # If uv.lock exists, convert to regular requirements.txt for system-wide install
+        if [[ -f "uv.lock" ]]; then
+          if [[ -f "requirements/ci.txt" ]]; then
+            echo "Error: Both uv.lock and requirements/ci.txt exist. Please use one or the other."
+            exit 1
+          fi
+          
+          # Generate requirements.txt from uv.lock
+          uv export --format=requirements.txt --frozen --no-hashes -o requirements/ci.txt --all-extras --all-groups
+        fi
+
         uv pip install \
           --system \
           -r requirements/ci.txt
@@ -154,4 +164,3 @@ runs:
       with:
         key: ${{ steps.setup_uv.outputs.cache_restore_key }}-${{ hashFiles(steps.setup_uv.outputs.cache_dependency_path) }}
         path: ${{ steps.setup_uv.outputs.uv_cache_dir }}
-
