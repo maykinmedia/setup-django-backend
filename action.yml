@@ -93,7 +93,6 @@ runs:
     - name: Install backend dependencies
       run: |
         uv pip install \
-          --system \
           -r requirements/ci.txt
       shell: bash
       working-directory: ${{ inputs.working-directory }}
