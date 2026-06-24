@@ -86,14 +86,24 @@ runs:
       id: setup-uv
       with:
         python-version: ${{ inputs.python-version }}
-        working-directory: ${{ inputs.working-directory }}
         # Disable cashing on the default branch and tag builds
         enable-cache: "${{ !(github.ref_name == github.event.repository.default_branch || startsWith(github.ref, 'refs/tags/')) }}"
+        activate-environment: 'true'
+        prune-cache: 'false'
+        cache-dependency-glob: |
+          **/requirements/*.txt
+          **/requirements/*.in
+          **/*requirements*.txt
+          **/*requirements*.in
+          **/*constraints*.txt
+          **/*constraints*.in
+          **/pyproject.toml
+          **/uv.lock
+          **/*.py.lock
 
     - name: Install backend dependencies
       run: |
         uv pip install \
-          --system \
           -r requirements/ci.txt
       shell: bash
       working-directory: ${{ inputs.working-directory }}
