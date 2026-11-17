@@ -62,12 +62,12 @@ runs:
     - name: Tune PostgreSQL for test performance
       if: ${{ inputs.pg-service != '' && inputs.optimize-postgres == 'yes' }}
       run: |
-        docker exec -i ${{ inputs.pg-service }} bash << EOF
-          sed -i -e 's/#fsync = on/fsync = off/' /var/lib/postgresql/data/postgresql.conf
-          sed -i -e 's/#full_page_writes = on/full_page_writes = off/' /var/lib/postgresql/data/postgresql.conf
-          sed -i -e 's/#synchronous_commit = on/synchronous_commit = off/' /var/lib/postgresql/data/postgresql.conf
-          sed -i -e 's/shared_buffers = 128MB/shared_buffers = 2GB/' /var/lib/postgresql/data/postgresql.conf
-          sed -i -e 's/max_wal_size = 1GB/max_wal_size = 4GB/' /var/lib/postgresql/data/postgresql.conf
+        docker exec -i ${{ inputs.pg-service }} bash << 'EOF'
+          sed -i -e 's/#fsync = on/fsync = off/' "$PGDATA/postgresql.conf"
+          sed -i -e 's/#full_page_writes = on/full_page_writes = off/' "$PGDATA/postgresql.conf"
+          sed -i -e 's/#synchronous_commit = on/synchronous_commit = off/' "$PGDATA/postgresql.conf"
+          sed -i -e 's/shared_buffers = 128MB/shared_buffers = 2GB/' "$PGDATA/postgresql.conf"
+          sed -i -e 's/max_wal_size = 1GB/max_wal_size = 4GB/' "$PGDATA/postgresql.conf"
         EOF
 
         docker restart --time=0 ${{ inputs.pg-service }}
